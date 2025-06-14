@@ -4,11 +4,13 @@ from aiogram.enums import ParseMode
 from config import BOT_TOKEN
 from handlers import start, weather
 from scheduler.job import start_scheduler
-
+from db.database import create_tables
 
 async def main():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
+
+    await create_tables()
 
     # Регистрируем хендлеры
     dp.include_routers(start.router, weather.router)
