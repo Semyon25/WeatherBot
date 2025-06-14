@@ -15,5 +15,5 @@ def require_env(var_name: str) -> str:
 BOT_TOKEN = require_env("BOT_TOKEN")
 WEATHER_API_KEY = require_env("WEATHER_API_KEY")
 USER_ID = int(require_env("USER_ID"))
-CITY = require_env("CITY")
+CITY = 'Москва'
 DATABASE_URL = require_env("DATABASE_URL")
