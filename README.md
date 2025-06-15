@@ -32,8 +32,8 @@ pip install -r requirements.txt
 ```
 BOT_TOKEN=ваш_токен_бота
 WEATHER_API_KEY=ключ_сервиса_weatherapi.com
-CITY=название_города
 USER_ID=ваш_телеграм_id
+DATABASE_URL=your_connection_string
 ```
 
 5. Запустите бота:

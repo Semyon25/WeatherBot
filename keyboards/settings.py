@@ -1,10 +1,10 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-def main_keyboard():
+def settings_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🌦 Узнать погоду")],
-            [KeyboardButton(text="⚙ Настройки")]
+            [KeyboardButton(text="📍 Изменить локацию")],
+            [KeyboardButton(text="🔙 Назад")]
         ],
         resize_keyboard=True
     )
