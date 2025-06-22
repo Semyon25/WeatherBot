@@ -1,6 +1,5 @@
 from aiogram import Router, F
 from aiogram.types import Message
-from services.weather import get_weather
 from keyboards.settings import settings_keyboard
 
 router = Router()

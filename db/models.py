@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String
+from sqlalchemy import Column, BigInteger, String, Index, func
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -17,3 +17,12 @@ class Location(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, nullable=False)
     name = Column(String, nullable=False)
+    
+    __table_args__ = (
+        Index(
+            'uq_user_location_lower',
+            'user_id',
+            func.lower(name),
+            unique=True
+        ),
+    )
