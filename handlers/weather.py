@@ -7,13 +7,16 @@ from db.locations import get_location_by_user_id
 
 router = Router()
 
+
 @router.message(F.text == "🌦 Узнать погоду")
 async def show_weather(message: Message):
     user = cast(User, message.from_user)
     async with get_session() as session:
-        location = await get_location_by_user_id(session, user.id)
-    if not location:
-        await message.answer("❗ Вы не указали локацию. Пожалуйста, укажите её в меню.")
+        locations = await get_location_by_user_id(session, user.id)
+    if not locations:
+        await message.answer(
+            "❗ Вы не указали локацию. Пожалуйста, укажите её в меню.")
         return
-    weather = await get_weather(location)
-    await message.answer(weather)
+    for loc in locations:
+        weather = await get_weather(loc)
+        await message.answer(weather, parse_mode="HTML")

@@ -36,7 +36,7 @@ def parse_current_weather(data: dict[str, Any], city: str) -> str:
     humidity = current["humidity"]
 
     return (
-        f"🌤 Сейчас в {city}:\n"
+        f"🌤 Сейчас в <b>{city}</b>:\n"
         f"🌡 Температура: {temp}°C (ощущается как {feels}°C)\n"
         f"🌥 Состояние: {condition}\n"
         f"💨 Ветер: {wind_ms} м/с\n"
@@ -63,7 +63,7 @@ def format_forecast_day(forecast_data: dict[str, Any], label: str) -> str:
 async def get_weather(city: str) -> str:
     data = await fetch_weather_data(city)
     if not data:
-        return "⚠ Не удалось получить данные о погоде."
+        return f"⚠️ Не удалось получить погоду для «{city}»"
 
     current_weather = parse_current_weather(data, city)
     forecast_days = data["forecast"]["forecastday"]

@@ -85,6 +85,7 @@ async def cancel_location_change(callback: CallbackQuery, state: FSMContext):
 # -------------------------------
 @router.message(LocationStates.waiting_for_location, F.text)
 async def add_location_by_text(message: Message, state: FSMContext):
+    await state.clear()
     user = cast(User, message.from_user)
     city = message.text or ""
     await process_location_addition(user.id, city, message, state)
@@ -94,15 +95,16 @@ async def add_location_by_text(message: Message, state: FSMContext):
 # -------------------------------
 @router.message(LocationStates.waiting_for_location, F.location)
 async def add_location_by_geo(message: Message, state: FSMContext):
+    await state.clear()
     user = cast(User, message.from_user)
     if not message.location:
-        await message.answer("❌ Не удалось получить координаты.")
+        await message.answer("❌ Не удалось получить координаты.", reply_markup=main_keyboard())
         return
 
     loc: Location = message.location
     city = await get_city_from_coords(loc.latitude, loc.longitude)
     if city is None:
-        await message.answer("❌ Не удалось определить город по геолокации")
+        await message.answer("❌ Не удалось определить город по геолокации", reply_markup=main_keyboard())
         return
 
     await process_location_addition(user.id, city, message, state)
@@ -110,12 +112,12 @@ async def add_location_by_geo(message: Message, state: FSMContext):
 async def process_location_addition(user_id: int, city: str, message: Message, state: FSMContext):
     city = city.strip()
     if not city:
-        await message.answer("❌ Вы не указали название города.")
+        await message.answer("❌ Вы не указали название города.", reply_markup=main_keyboard())
         return
 
     available = await is_weather_available(city)
     if not available:
-        await message.answer(f"❌ Погода для города «{city}» недоступна")
+        await message.answer(f"❌ Погода для города «{city}» недоступна", reply_markup=main_keyboard())
         return
 
     async with get_session() as session:
@@ -128,4 +130,4 @@ async def process_location_addition(user_id: int, city: str, message: Message, s
             await message.answer(f"✅ Локация «{city}» добавлена!", reply_markup=main_keyboard())
             await state.clear()
         else:
-            await message.answer(f"❌ Локация «{city}» уже существует.")
+            await message.answer(f"❌ Локация «{city}» уже существует.", reply_markup=main_keyboard())
