@@ -18,7 +18,7 @@ scheduler = AsyncIOScheduler()
 
 async def setup_scheduler(bot: Bot):
   scheduler = AsyncIOScheduler(timezone=ZoneInfo("Europe/Moscow"))
-  scheduler.add_job(send_scheduled_notifications, CronTrigger(minute="*"), args=[bot])
+  scheduler.add_job(send_scheduled_notifications, CronTrigger(minute="*/10"), args=[bot])
   scheduler.start()
 
 async def send_scheduled_notifications(bot: Bot):
