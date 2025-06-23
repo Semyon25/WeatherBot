@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from models.notification import Notification
 
-def notifications_keyboard(notifications: list[Notification]) -> InlineKeyboardMarkup:
+def notifications_keyboard(notifications: list[Notification], canAdd: bool) -> InlineKeyboardMarkup:
     buttons = []
     for notif in notifications:
         emoji = {
@@ -13,7 +13,8 @@ def notifications_keyboard(notifications: list[Notification]) -> InlineKeyboardM
         callback_data = f"del_{notif.time}|{notif.mode}"
         buttons.append([InlineKeyboardButton(text=f"❌ {label}", callback_data=callback_data)])
 
-    buttons.append([InlineKeyboardButton(text="➕ Добавить", callback_data="add_notification")])
+    if canAdd:
+        buttons.append([InlineKeyboardButton(text="➕ Добавить", callback_data="add_notification")])
     buttons.append([InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_menu")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 

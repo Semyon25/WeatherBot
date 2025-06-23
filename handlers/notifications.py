@@ -25,7 +25,12 @@ async def show_notifications_for_user(user_id: int, message):
         session=session,
         user_id=user_id
     )
-  await message.answer("Ваши уведомления:", reply_markup=notifications_keyboard(notifications))
+  if not notifications:
+    await message.answer("У вас нет уведомлений.")
+    return
+
+  canAdd = len(notifications) < 10
+  await message.answer("Ваши уведомления:", reply_markup=notifications_keyboard(notifications, canAdd))
 
 @router.callback_query(F.data.startswith("del_"))
 async def delete_notification_handler(callback: CallbackQuery):
@@ -99,13 +104,14 @@ async def set_mode(callback: CallbackQuery, state: FSMContext):
   user_id = callback.from_user.id
   notif = Notification(user_id=user_id, time=time, mode=mode)
   async with get_session() as session:
-    await db.add_notification(
-      session=session,
-      notif=notif
-    )
+    notifications = await db.get_user_notifications(session, user_id)
+    if await notification_exists(notifications, notif):
+        await callback.answer("Такое уведомление уже существует", show_alert=True)
+    else:
+        await db.add_notification(session=session, notif=notif)
+        await callback.answer("Добавлено")
   await callback.message.delete()
   await state.clear()
-  await callback.answer("Добавлено")
   await show_notifications_for_user(callback.from_user.id, callback.message)
 
 @router.callback_query(F.data == "back_to_notifications")
@@ -124,3 +130,26 @@ async def back_to_menu(callback: CallbackQuery):
   await callback.message.delete()
   await callback.message.answer("Главное меню 🏠", reply_markup=main_keyboard())
   await callback.answer()
+
+async def notification_exists(notifications: list[Notification], notif: Notification) -> bool:
+  time = notif.time
+  mode = notif.mode
+
+  # Сначала соберём все modes для того же времени
+  existing_modes = {n.mode for n in notifications if n.time == time}
+
+  if mode == "daily":
+      # Если пытаемся добавить daily, но есть weekdays или weekends — запрещаем
+      if "weekdays" in existing_modes or "weekends" in existing_modes or "daily" in existing_modes:
+          return True
+
+  elif mode in {"weekdays", "weekends"}:
+      # Если пытаемся добавить weekdays или weekends
+      # но уже есть daily — запрещаем
+      if "daily" in existing_modes:
+          return True
+      # Если уже есть именно такой mode — тоже запрещаем (чтобы не дублировать)
+      if mode in existing_modes:
+          return True
+
+  return False

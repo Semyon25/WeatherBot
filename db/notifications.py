@@ -6,7 +6,9 @@ import models.notification as model
 
 async def get_user_notifications(session: AsyncSession, user_id: int) -> list[model.Notification]:
     result = await session.execute(
-        select(db.Notification).where(db.Notification.user_id == user_id)
+        select(db.Notification)
+        .where(db.Notification.user_id == user_id)
+        .order_by(db.Notification.time)
     )
     rows = result.scalars().all()
     return [
@@ -21,6 +23,7 @@ async def get_user_notifications(session: AsyncSession, user_id: int) -> list[mo
 async def get_notifications(session: AsyncSession) -> list[model.Notification]:
     result = await session.execute(
         select(db.Notification)
+        .order_by(db.Notification.time)
     )
     rows = result.scalars().all()
     return [
