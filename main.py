@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN
-from scheduler.job import start_scheduler
+from services.notification_scheduler import setup_scheduler
 from db.database import create_tables, delete_tables
 from routers import setup_routers
 
@@ -16,7 +16,7 @@ async def main():
     dp.include_router(setup_routers())
 
     # Запускаем планировщик
-    asyncio.create_task(start_scheduler(bot))
+    asyncio.create_task(setup_scheduler(bot))
 
     # Запуск бота
     await dp.start_polling(bot)

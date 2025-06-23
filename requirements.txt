@@ -2,7 +2,6 @@ aiogram==3.4.1
 aiohttp
 python-dotenv
 apscheduler
-pytz
 binpan
 
 asyncpg
