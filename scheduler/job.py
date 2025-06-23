@@ -8,7 +8,7 @@ import pytz
 
 async def send_weather(bot: Bot):
   weather = await get_weather('Москва')
-  await bot.send_message(ADMIN_ID, weather)
+  await bot.send_message(ADMIN_ID, weather, parse_mode="HTML")
 
 
 async def start_scheduler(bot: Bot):
