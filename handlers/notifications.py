@@ -25,12 +25,9 @@ async def show_notifications_for_user(user_id: int, message):
         session=session,
         user_id=user_id
     )
-  if not notifications:
-    await message.answer("У вас нет уведомлений.")
-    return
-
+  text = "Ваши уведомления" if notifications  else "У вас нет уведомлений"
   canAdd = len(notifications) < 10
-  await message.answer("Ваши уведомления:", reply_markup=notifications_keyboard(notifications, canAdd))
+  await message.answer(text, reply_markup=notifications_keyboard(notifications, canAdd))
 
 @router.callback_query(F.data.startswith("del_"))
 async def delete_notification_handler(callback: CallbackQuery):
