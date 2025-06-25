@@ -2,6 +2,7 @@ from typing import cast
 from aiogram import Router, F
 from aiogram.types import Message, User, CallbackQuery
 from aiogram.fsm.context import FSMContext
+from sqlalchemy import false
 from states.notifications import NotificationStates
 from models.notification import Notification
 from keyboards.notifications import (
@@ -15,11 +16,10 @@ router = Router()
 
 @router.message(F.text == "🔔 Уведомления")
 async def show_notifications(message: Message, state: FSMContext):
-  await message.delete()
   user = cast(User, message.from_user)
-  await show_notifications_for_user(user.id, message)
+  await show_notifications_for_user(user.id, message, edit=False)
 
-async def show_notifications_for_user(user_id: int, message):
+async def show_notifications_for_user(user_id: int, message, edit=True):
   async with get_session() as session:
     notifications = await db.get_user_notifications(
         session=session,
@@ -27,7 +27,10 @@ async def show_notifications_for_user(user_id: int, message):
     )
   text = "Ваши уведомления" if notifications  else "У вас нет уведомлений"
   canAdd = len(notifications) < 10
-  await message.answer(text, reply_markup=notifications_keyboard(notifications, canAdd))
+  if edit:
+    await message.edit_text(text, reply_markup=notifications_keyboard(notifications, canAdd))
+  else:
+    await message.answer(text, reply_markup=notifications_keyboard(notifications, canAdd))
 
 @router.callback_query(F.data.startswith("del_"))
 async def delete_notification_handler(callback: CallbackQuery):
@@ -48,7 +51,6 @@ async def delete_notification_handler(callback: CallbackQuery):
       session=session,
       notif=notif
     )
-  await callback.message.delete()
   await callback.answer("Уведомление удалено")
   await show_notifications_for_user(user_id, callback.message)
 
@@ -56,9 +58,8 @@ async def delete_notification_handler(callback: CallbackQuery):
 async def add_notification_handler(callback: CallbackQuery, state: FSMContext):
   if not isinstance(callback.message, Message):
     return
-  await callback.message.delete()
   await state.set_state(NotificationStates.choosing_hour)
-  await callback.message.answer("Выберите час:", reply_markup=hour_keyboard())
+  await callback.message.edit_text("Выберите час:", reply_markup=hour_keyboard())
   await callback.answer()
 
 @router.callback_query(F.data.startswith("set_hour:"))
@@ -69,9 +70,8 @@ async def set_hour(callback: CallbackQuery, state: FSMContext):
     return
   hour = callback.data.split(":")[1]
   await state.update_data(hour=hour)
-  await callback.message.delete()
   await state.set_state(NotificationStates.choosing_minute)
-  await callback.message.answer("Выберите минуты:", reply_markup=minute_keyboard())
+  await callback.message.edit_text("Выберите минуты:", reply_markup=minute_keyboard())
   await callback.answer()
 
 @router.callback_query(F.data.startswith("set_minute:"))
@@ -84,9 +84,8 @@ async def set_minute(callback: CallbackQuery, state: FSMContext):
   data = await state.get_data()
   time = f"{data['hour']}:{minute}"
   await state.update_data(time=time)
-  await callback.message.delete()
   await state.set_state(NotificationStates.choosing_mode)
-  await callback.message.answer("Выберите режим:", reply_markup=mode_keyboard())
+  await callback.message.edit_text("Выберите режим:", reply_markup=mode_keyboard())
   await callback.answer()
 
 @router.callback_query(F.data.startswith("set_mode:"))
@@ -107,7 +106,6 @@ async def set_mode(callback: CallbackQuery, state: FSMContext):
     else:
         await db.add_notification(session=session, notif=notif)
         await callback.answer("Добавлено")
-  await callback.message.delete()
   await state.clear()
   await show_notifications_for_user(callback.from_user.id, callback.message)
 
@@ -116,7 +114,6 @@ async def back_to_notifications(callback: CallbackQuery, state: FSMContext):
   if not isinstance(callback.message, Message):
     return
   await state.clear()
-  await callback.message.delete()
   await show_notifications_for_user(callback.from_user.id, callback.message)
   await callback.answer()
 
